@@ -1,0 +1,117 @@
+name: Build and Push Docker Compose Services
+
+on:
+  push:
+    branches:
+      - release  # Adjust this to the branches you want to trigger builds
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      # 1. Checkout the Repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2.0. Check Disk Space Before cach
+      - name: Check Disk Space Before Tool Cache
+        run: df -h
+      # 2.1. Free unusing tool cache
+      - name: Remove Unnecessary Tool Caches
+        run: |
+          # Define the tool cache directory
+          TOOL_CACHE_DIR="${AGENT_TOOLSDIRECTORY:-$HOME/hostedtoolcache}"
+          
+          # List of tool caches to remove (customize as needed)
+          TOOLS_TO_REMOVE=("node" "go" "ruby")  # Add or remove tools based on your requirements
+          
+          for TOOL in "${TOOLS_TO_REMOVE[@]}"; do
+            TOOL_PATH="${TOOL_CACHE_DIR}/${TOOL}"
+            if [ -d "$TOOL_PATH" ]; then
+              echo "Removing cache for $TOOL..."
+              rm -rf "$TOOL_PATH"
+              echo "Removed cache for $TOOL."
+            else
+              echo "No cache found for $TOOL. Skipping..."
+            fi
+          done
+        shell: bash
+      # 2.2. Check Disk Space After cache
+      - name: Check Disk Space After Tool Cache
+        run: df -h
+
+      # 2.3. Free Up More Disk Space
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false           # Enable tool-cache cleanup
+          android: true               # Clean Android caches
+          dotnet: true                # Clean .NET caches
+          haskell: true               # Clean Haskell caches
+          large-packages: true        # Remove large miscellaneous packages
+          docker-images: true         # Remove unused Docker images
+          swap-storage: true          # Clean swap storage
+
+      # 3. Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 4. Log in to NVIDIA Container Registry (NGC)
+      - name: Log in to NGC (NVIDIA Container Registry)
+        run: |
+          echo "$NGC_API_KEY" | docker login nvcr.io -u '$oauthtoken' --password-stdin
+        env:
+          NGC_API_KEY: ${{ secrets.NGC_API_KEY }}
+
+      # 5. Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # 6. Export .env.base Variables
+      - name: Export .env.base Variables
+        run: |
+          set -a
+          source docker/.env.base
+          set +a
+          echo "ACCEPT_EULA=${ACCEPT_EULA}" >> $GITHUB_ENV
+          echo "ISAACSIM_BASE_IMAGE=${ISAACSIM_BASE_IMAGE}" >> $GITHUB_ENV
+          echo "ISAACSIM_VERSION=${ISAACSIM_VERSION}" >> $GITHUB_ENV
+          echo "DOCKER_ISAACSIM_ROOT_PATH=${DOCKER_ISAACSIM_ROOT_PATH}" >> $GITHUB_ENV
+          echo "DOCKER_ISAACLAB_PATH=${DOCKER_ISAACLAB_PATH}" >> $GITHUB_ENV
+          echo "DOCKER_USER_HOME=${DOCKER_USER_HOME}" >> $GITHUB_ENV
+        shell: bash
+
+      # 7.0. Check Disk Space Before Build
+      - name: Check Disk Space Before Build
+        run: df -h
+
+      # 7.1 Build and Push isaac-lab-base Image
+      - name: Build and Push isaac-lab-base Image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: docker/Dockerfile.base
+          push: true
+          tags: octipus/isaac-lab-base:latest
+          build-args: |
+            ACCEPT_EULA=${{ env.ACCEPT_EULA }}
+            ISAACSIM_BASE_IMAGE_ARG=${{ env.ISAACSIM_BASE_IMAGE }}
+            ISAACSIM_VERSION_ARG=${{ env.ISAACSIM_VERSION }}
+            ISAACSIM_ROOT_PATH_ARG=${{ env.DOCKER_ISAACSIM_ROOT_PATH }}
+            ISAACLAB_PATH_ARG=${{ env.DOCKER_ISAACLAB_PATH }}
+            DOCKER_USER_HOME_ARG=${{ env.DOCKER_USER_HOME }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      # 7.2. Check Disk Space After Build
+      - name: Check Disk Space After Build
+        run: df -h
+
+      # 8. List Built Images (Optional)
+      - name: List Built Images
+        run: docker images
