@@ -1,82 +1,15 @@
 Changelog
 ---------
 
-0.30.7 (2025-01-30)
-~~~~~~~~~~~~~~~~~~~
-
-Fixed
-^^^^^
-
-* Fixed resampling of interval time left for the next event in the :class:`~omni.isaac.lab.managers.EventManager`
-  class. Earlier, the time left for interval-based events was not being resampled on episodic resets. This led
-  to the event being triggered at the wrong time after the reset.
-
-
-0.30.6 (2025-01-17)
-~~~~~~~~~~~~~~~~~~~
-
-Fixed
-^^^^^
-
-* Removed deprecation of :attr:`omni.isaac.lab.assets.ArticulationData.root_state_w` and
-  :attr:`omni.isaac.lab.assets.ArticulationData.body_state_w` derived properties.
-* Removed deprecation of :meth:`omni.isaac.lab.assets.Articulation.write_root_state_to_sim`.
-* Replaced calls to :attr:`omni.isaac.lab.assets.ArticulationData.root_com_state_w` and
-  :attr:`omni.isaac.lab.assets.ArticulationData.root_link_state_w` with corresponding calls to
-  :attr:`omni.isaac.lab.assets.ArticulationData.root_state_w`.
-* Replaced calls to :attr:`omni.isaac.lab.assets.ArticulationData.body_com_state_w` and
-  :attr:`omni.isaac.lab.assets.ArticulationData.body_link_state_w` properties with corresponding calls to
-  :attr:`omni.isaac.lab.assets.ArticulationData.body_state_w` properties.
-* Removed deprecation of :attr:`omni.isaac.lab.assets.RigidObjectData.root_state_w` derived properties.
-* Removed deprecation of :meth:`omni.isaac.lab.assets.RigidObject.write_root_state_to_sim`.
-* Replaced calls to :attr:`omni.isaac.lab.assets.RigidObjectData.root_com_state_w` and
-  :attr:`omni.isaac.lab.assets.RigidObjectData.root_link_state_w` properties with corresponding calls to
-  :attr:`omni.isaac.lab.assets.RigidObjectData.root_state_w` properties.
-* Removed deprecation of :attr:`omni.isaac.lab.assets.RigidObjectCollectionData.root_state_w` derived properties.
-* Removed deprecation of :meth:`omni.isaac.lab.assets.RigidObjectCollection.write_root_state_to_sim`.
-* Replaced calls to :attr:`omni.isaac.lab.assets.RigidObjectCollectionData.root_com_state_w` and
-  :attr:`omni.isaac.lab.assets.RigidObjectData.root_link_state_w` properties with corresponding calls to
-  :attr:`omni.isaac.lab.assets.RigidObjectData.root_state_w` properties.
-* Fixed indexing issue in ``write_root_link_velocity_to_sim`` in :class:`omni.isaac.lab.assets.RigidObject`
-* Fixed index broadcasting in ``write_object_link_velocity_to_sim`` and ``write_object_com_pose_to_sim`` in
-  the :class:`omni.isaac.lab.assets.RigidObjectCollection` class.
-
-
-0.30.5 (2025-01-14)
-~~~~~~~~~~~~~~~~~~~
-
-Fixed
-^^^^^
-
-* Fixed the respawn of only wrong object samples in :func:`repeated_objects_terrain` of :mod:`omni.isaac.lab.terrains.trimesh` module. Previously, the function was respawning all objects in the scene instead of only the wrong object samples, which in worst case could lead to infinite respawn loop.
-
-
-0.30.4 (2025-01-08)
-~~~~~~~~~~~~~~~~~~~
-
-Fixed
-^^^^^
-
-* fixed docstring in articulation data :class:`omni.isaac.lab.assets.ArticulationData`.
-  In body properties sections, the second dimension should be num_bodies but was documented as 1.
-
-
-0.30.3 (2025-01-02)
-~~~~~~~~~~~~~~~~~~~
-
-Added
-^^^^^
-
-* Added body tracking as an origin type to :class:`omni.isaac.lab.envs.ViewerCfg` and :class:`omni.isaac.lab.envs.ui.ViewportCameraController`.
-
-
 0.30.2 (2024-12-22)
 ~~~~~~~~~~~~~~~~~~~
 
 Fixed
 ^^^^^
 
-* Fixed populating default_joint_stiffness and default_joint_damping values for ImplicitActuator instances in :class:`omni.isaac.lab.assets.Articulation`
+* Fixed the issue in :class:`omni.isaac.lab.assets.Articulation` where the field
+default_joint_stiffness and default_joint_damping are not correctly set if actuator
+is instance of ImplicitActuator
 
 
 0.30.1 (2024-12-17)
